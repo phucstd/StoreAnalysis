@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vending Machine Analysis</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        /* Style for the loading spinner */
+        #loading {
+            display: none; /* Hide by default */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            font-size: 2em;
+            color: #3498db;
+        }
+
+        /* Spinner animation */
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light gray */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            transition: transform 1s linear; /* Set the transition for smooth spinning */
+        }
+
+        /* Apply the rotation when the spinning class is added */
+        .spinning {
+            transform: rotate(360deg); /* Rotate 360 degrees */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Upload Image for Analysis</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="fileInput">Upload an Image:</label>
+        <input type="file" id="fileInput" name="file" accept="image/*" required>
+        <button type="submit">Process</button>
+    </form>
+
+    <!-- Loading Spinner -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <div id="emptySlots"></div>
+
+    <div id="response">
+        <h2>Processed Image:</h2>
+        <img id="resultImage" alt="Result will appear here" style="max-width: 100%;">
+    </div>
+
+
+    <button id="clearButton">Clear</button>
+
+    <script>
+        $(document).ready(function () {
+            // Handle form submission
+            $("#uploadForm").on("submit", function (e) {
+                e.preventDefault();
+
+                // Clear any previously displayed processed image and empty slots
+                $("#resultImage").attr("src", "");
+                $("#emptySlots").text("");  // Clear the empty slots display
+
+                // Show the loading spinner
+                $("#loading").show();
+
+                // Add the spinning class to start the animation
+                $(".spinner").addClass("spinning");
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: "/Home/AnalyzeImage",
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        // Hide the loading spinner
+                        $("#loading").hide();
+
+                        // Remove the spinning class
+                        $(".spinner").removeClass("spinning");
+
+                        // Display processed image
+                        $("#resultImage").attr("src", "data:image/png;base64," + response.image);
+
+                        // Log bounding box data
+                        console.log(response.boundingBoxes);
+
+                        // Display empty slots
+                        if (response.emptySlots.length > 0) {
+                            var slotsHtml = "<h3>Empty Slots:</h3><ul>";
+                            response.emptySlots.forEach(function (slot) {
+                                slotsHtml += "<li>" + slot + "</li>";
+                            });
+                            slotsHtml += "</ul>";
+                            $("#emptySlots").html(slotsHtml);
+                        } else {
+                            $("#emptySlots").html("<h3>No empty slots</h3>");
+                        }
+                    },
+                    error: function () {
+                        // Hide the loading spinner
+                        $("#loading").hide();
+
+                        // Remove the spinning class
+                        $(".spinner").removeClass("spinning");
+
+                        alert("Error processing the image!");
+                    }
+                });
+            });
+
+            // Handle clear button click to reset form and image display
+            $("#clearButton").on("click", function () {
+                // Clear the file input
+                $("#fileInput").val("");
+
+                // Clear the processed image
+                $("#resultImage").attr("src", "");
+
+                // Clear the empty slots log
+                $("#emptySlots").html("");  // Clear empty slots section
+
+                // Hide the loading spinner (in case it's visible)
+                $("#loading").hide();
+
+                // Remove the spinning class
+                $(".spinner").removeClass("spinning");
+            });
+        });
+    </script>
+</body>
+</html>
