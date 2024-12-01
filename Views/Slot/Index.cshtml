@@ -1,0 +1,29 @@
+﻿@model IEnumerable<Slot>
+
+<h2>Slots</h2>
+<table>
+    <tr>
+        <th>Slot Name</th>
+        <th>Status</th>
+        <th>Last Refill</th>
+        <th>Actions</th>
+    </tr>
+    @foreach (var slot in Model)
+    {
+        <tr>
+            <td>@slot.Name</td>
+            <td>@(slot.IsEmpty ? "Empty" : "Occupied")</td>
+            <td>@slot.LastRefillDate.ToString("yyyy-MM-dd")</td>
+            <td>
+                <form method="post" action="/Slot/Refill">
+                    <input type="hidden" name="slotId" value="@slot.SlotID" />
+                    <button type="submit">Refill</button>
+                </form>
+                <form method="post" action="/Slot/EmptySlot">
+                    <input type="hidden" name="slotId" value="@slot.SlotID" />
+                    <button type="submit">Empty</button>
+                </form>
+            </td>
+        </tr>
+    }
+</table>
