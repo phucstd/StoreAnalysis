@@ -17,50 +17,115 @@ namespace StoreAnalysis.Controllers
         // GET: Display all slots
         public IActionResult Index()
         {
-            var slots = _context.Slots.Include(s => s.Items).ToList();
+            var slots = _context.Slots
+                .Include(s => s.Items) // Include related items
+                .ToList();
+
             return View(slots);
         }
 
-        // POST: Refill a slot
-        [HttpPost]
-        public IActionResult Refill(int slotId, string itemName, int quantity, float price)
-        {
-            var slot = _context.Slots.FirstOrDefault(s => s.SlotID == slotId);
-            if (slot == null) return NotFound();
 
-            // Update slot
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Refill(RefillItemViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Debugging code to see what is invalid
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    Console.WriteLine(error.ErrorMessage);
+                }
+
+                return View(model);  // If the form data is not valid, return to the same view.
+            }
+
+
+            // Fetch the slot by SlotID from the database.
+            var slot = _context.Slots.FirstOrDefault(s => s.SlotID == model.SlotID);
+            if (slot == null)
+            {
+                return NotFound(); // If the slot is not found, return a NotFound result.
+            }
+
+            // Update slot details
             slot.IsEmpty = false;
             slot.LastRefillDate = DateTime.Now;
 
-            // Add item
+            // Add new item to the slot
             var item = new Item
             {
-                SlotID = slotId,
-                ItemName = itemName,
-                Quantity = quantity,
-                Price = price,
+                SlotID = model.SlotID,
+                ItemName = model.ItemName,
+                Price = model.Price,
                 AddedDate = DateTime.Now
             };
+
+            // Add the item to the database
             _context.Items.Add(item);
-            _context.SaveChanges();
+            _context.SaveChanges(); // Save changes to persist the new item.
+
+            TempData["Message"] = $"Item '{item.ItemName}' added to Slot {slot.Name}.";
+            return RedirectToAction("Index"); // Redirect back to the Index page.
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EmptySlot(int slotId)
+        {
+            var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
+            if (slot == null) return NotFound();
+
+            try
+            {
+                // Log sales before deleting items
+                foreach (var item in slot.Items)
+                {
+                    var sale = new Sale
+                    {
+                        ItemID = item.ItemID,
+                        SaleDate = DateTime.Now
+                    };
+                    _context.Sales.Add(sale);
+                }
+
+                // Save sales first
+                _context.SaveChanges();
+
+                // Remove items and mark slot empty
+                _context.Items.RemoveRange(slot.Items);
+                slot.IsEmpty = true;
+                _context.SaveChanges();
+
+                TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged.";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                TempData["Message"] = "An error occurred while clearing the slot.";
+            }
 
             return RedirectToAction("Index");
         }
 
-      
-        public void EmptySlot(int slotId)
+
+        // GET: Display Refill Form
+        public IActionResult Refill(int slotId)
         {
             var slot = _context.Slots.FirstOrDefault(s => s.SlotID == slotId);
-            if (slot == null) return;
+            if (slot == null) return NotFound();
 
-            // Set slot as empty
-            slot.IsEmpty = true;
+            var model = new RefillItemViewModel
+            {
+                SlotID = slot.SlotID
+            };
 
-            // Remove all items in the slot
-            var items = _context.Items.Where(i => i.SlotID == slotId);
-            _context.Items.RemoveRange(items);
-            _context.SaveChanges();
+            return View(model);
         }
+
+        
+
     }
 
 }

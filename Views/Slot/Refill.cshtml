@@ -1,0 +1,24 @@
+﻿@model StoreAnalysis.Models.RefillItemViewModel
+
+<h2>Refill Slot @Model.SlotID</h2>
+
+@using (Html.BeginForm("Refill", "Slot", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    @Html.HiddenFor(m => m.SlotID)
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ItemName)
+        @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ItemName, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Price)
+        @Html.TextBoxFor(m => m.Price, new { @class = "form-control", type = "number", step = "0.01" })
+        @Html.ValidationMessageFor(m => m.Price, "", new { @class = "text-danger" })
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Items</button>
+}

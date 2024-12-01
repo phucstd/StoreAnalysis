@@ -16,24 +16,6 @@ namespace StoreAnalysis.Controllers
         {
             return View();
         }
-        // GET: Statistics
-        public IActionResult Statistics()
-        {
-            var mostSoldItem = _context.Sales
-                .GroupBy(s => s.ItemID)
-                .Select(g => new
-                {
-                    ItemID = g.Key,
-                    TotalSold = g.Sum(s => s.Quantity)
-                })
-                .OrderByDescending(g => g.TotalSold)
-                .FirstOrDefault();
-
-            var item = _context.Items.FirstOrDefault(i => i.ItemID == mostSoldItem.ItemID);
-
-            ViewBag.MostSoldItem = item?.ItemName;
-            return View();
-        }
     }
 
 }

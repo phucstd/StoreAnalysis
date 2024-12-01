@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StoreAnalysis.Data;
 
@@ -11,9 +12,11 @@ using StoreAnalysis.Data;
 namespace StoreAnalysis.Migrations
 {
     [DbContext(typeof(StoreAnalysisContext))]
-    partial class StoreAnalysisContextModelSnapshot : ModelSnapshot
+    [Migration("20241201195958_remove-foreigh-key-in-sale")]
+    partial class removeforeighkeyinsale
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

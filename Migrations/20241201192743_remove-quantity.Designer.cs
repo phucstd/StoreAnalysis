@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StoreAnalysis.Data;
 
@@ -11,9 +12,11 @@ using StoreAnalysis.Data;
 namespace StoreAnalysis.Migrations
 {
     [DbContext(typeof(StoreAnalysisContext))]
-    partial class StoreAnalysisContextModelSnapshot : ModelSnapshot
+    [Migration("20241201192743_remove-quantity")]
+    partial class removequantity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -263,10 +266,18 @@ namespace StoreAnalysis.Migrations
                     b.Property<int>("ItemID")
                         .HasColumnType("int");
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("SaleDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<float>("TotalPrice")
+                        .HasColumnType("real");
+
                     b.HasKey("SaleID");
+
+                    b.HasIndex("ItemID");
 
                     b.ToTable("Sales");
                 });
@@ -354,6 +365,17 @@ namespace StoreAnalysis.Migrations
                         .IsRequired();
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("StoreAnalysis.Models.Sale", b =>
+                {
+                    b.HasOne("StoreAnalysis.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("StoreAnalysis.Models.Slot", b =>

@@ -1,29 +1,59 @@
-﻿@model IEnumerable<Slot>
+﻿@model IEnumerable<StoreAnalysis.Models.Slot>
 
-<h2>Slots</h2>
-<table>
-    <tr>
-        <th>Slot Name</th>
-        <th>Status</th>
-        <th>Last Refill</th>
-        <th>Actions</th>
-    </tr>
-    @foreach (var slot in Model)
-    {
+<h2>Slot List</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Message"]
+    </div>
+}
+
+<table class="table">
+    <thead>
         <tr>
-            <td>@slot.Name</td>
-            <td>@(slot.IsEmpty ? "Empty" : "Occupied")</td>
-            <td>@slot.LastRefillDate.ToString("yyyy-MM-dd")</td>
-            <td>
-                <form method="post" action="/Slot/Refill">
-                    <input type="hidden" name="slotId" value="@slot.SlotID" />
-                    <button type="submit">Refill</button>
-                </form>
-                <form method="post" action="/Slot/EmptySlot">
-                    <input type="hidden" name="slotId" value="@slot.SlotID" />
-                    <button type="submit">Empty</button>
-                </form>
-            </td>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Last Refill</th>
+            <th>Current Items</th>
+            <th>Actions</th>
         </tr>
-    }
+    </thead>
+    <tbody>
+        @foreach (var slot in Model)
+        {
+            <tr>
+                <td>@slot.Name</td>
+                <td>@(slot.IsEmpty ? "Empty" : "Occupied")</td>
+                <td>@slot.LastRefillDate.ToString("yyyy-MM-dd")</td>
+                <td>
+                    @if (slot.Items != null && slot.Items.Any())
+                    {
+                        <ul>
+                            @foreach (var item in slot.Items)
+                            {
+                                <li>
+                                    <strong>@item.ItemName</strong> -
+                                    Price: @item.Price.ToString("C")
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span>No items</span>
+                    }
+                </td>
+                <td>
+                    <a href="@Url.Action("Refill", "Slot", new { slotId = slot.SlotID })" class="btn btn-success">Refill</a>
+                    @using (Html.BeginForm("EmptySlot", "Slot", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="slotId" value="@slot.SlotID" />
+                        <button type="submit" class="btn btn-danger">Empty</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
 </table>
