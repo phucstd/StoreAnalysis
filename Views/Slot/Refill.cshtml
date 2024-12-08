@@ -9,16 +9,9 @@
     @Html.HiddenFor(m => m.SlotID)
 
     <div class="form-group">
-        @Html.LabelFor(m => m.ItemName)
-        @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control" })
-        @Html.ValidationMessageFor(m => m.ItemName, "", new { @class = "text-danger" })
+        @Html.LabelFor(m => m.Id)
+        @Html.TextBoxFor(m => m.Id, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Id, "", new { @class = "text-danger" })
     </div>
-
-    <div class="form-group">
-        @Html.LabelFor(m => m.Price)
-        @Html.TextBoxFor(m => m.Price, new { @class = "form-control", type = "number", step = "0.01" })
-        @Html.ValidationMessageFor(m => m.Price, "", new { @class = "text-danger" })
-    </div>
-
     <button type="submit" class="btn btn-primary">Add Items</button>
 }

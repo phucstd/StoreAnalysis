@@ -40,6 +40,11 @@ namespace StoreAnalysis.Controllers
                 return View(model);  // If the form data is not valid, return to the same view.
             }
 
+            var itemStorage = _context.ItemsStorage.FirstOrDefault(_ => _.Id.Equals(model.Id));
+            if ( itemStorage == null)
+            {
+                return NotFound();
+            }
 
             // Fetch the slot by SlotID from the database.
             var slot = _context.Slots.FirstOrDefault(s => s.SlotID == model.SlotID);
@@ -51,14 +56,11 @@ namespace StoreAnalysis.Controllers
             // Update slot details
             slot.IsEmpty = false;
             slot.LastRefillDate = DateTime.Now;
-
-            var newItemStorage = new ItemStorage()
+            if(slot.Items == null)
             {
-                Id = model.Id,
-                AddedDate = DateTime.Now,
-                ItemName = model.ItemName,
-                Price = model.Price,
-            };
+                slot.Items = new List<ItemStorage>();
+            }
+            slot.Items.Add(itemStorage);
 
             // Add new item to the slot
             var item = new Item

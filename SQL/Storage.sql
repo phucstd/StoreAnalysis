@@ -47,4 +47,14 @@ VALUES
     ('SKU045', 'Dark Chocolate Bar', '70% cocoa dark chocolate, 50g', 'Lindt', 2.00, '2024-12-15', 12),
     ('SKU046', 'Cupcake', 'Chocolate cupcake with cream filling', 'Hostess Cupcake', 1.50, '2024-12-16', 12),
     ('SKU047', 'Rice Krispie Treat', 'Marshmallow and cereal snack bar', 'Kellogg', 1.50, '2024-12-17', 12),
-    ('SKU048', 'Honey Roasted Nuts', 'Mixed honey roasted nuts, 50g', 'Planters', 2.00, '2024-12-18', 12);
+    ('SKU048', 'Honey Roasted Nuts', 'Mixed honey roasted nuts, 50g', 'Planters', 2.00, '2024-12-18', 12),
+	('SKU049', 'Vanilla Ice Cream', 'Creamy vanilla ice cream, 500ml', 'Haagen-Dazs', 5.00, '2024-12-19', NULL),
+    ('SKU050', 'Chocolate Milkshake', 'Rich chocolate milkshake, 350ml', 'McDonald', 3.50, '2024-12-20', NULL),
+    ('SKU051', 'Lemonade', 'Freshly squeezed lemonade, 500ml', 'Simply Lemonade', 2.50, '2024-12-21', NULL),
+    ('SKU052', 'Chocolate Bar', 'Milk chocolate bar, 100g', 'Cadbury', 2.00, '2024-12-22', NULL),
+    ('SKU053', 'Caramel Popcorn', 'Sweet and salty caramel popcorn, 150g', 'Popcornopolis', 3.00, '2024-12-23', NULL),
+    ('SKU054', 'Churros', 'Crispy churros with cinnamon sugar, 5 pieces', 'Café Rio', 2.50, '2024-12-24', NULL),
+    ('SKU055', 'Apple Juice', '100% pure apple juice, 500ml', 'Tropicana', 2.00, '2024-12-25', NULL),
+    ('SKU056', 'Coconut Water', 'Natural coconut water, 330ml', 'Vita Coco', 3.00, '2024-12-26', NULL),
+    ('SKU057', 'Milk Tea', 'Sweetened milk tea, 500ml', 'Chatime', 2.50, '2024-12-27', NULL),
+    ('SKU058', 'Frozen Yogurt', 'Frozen yogurt with fruit topping, 400ml', 'Yasso', 3.50, '2024-12-28', NULL);
