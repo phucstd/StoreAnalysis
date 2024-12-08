@@ -52,20 +52,26 @@ namespace StoreAnalysis.Controllers
             slot.IsEmpty = false;
             slot.LastRefillDate = DateTime.Now;
 
+            var newItemStorage = new ItemStorage()
+            {
+                Id = model.Id,
+                AddedDate = DateTime.Now,
+                ItemName = model.ItemName,
+                Price = model.Price,
+            };
+
             // Add new item to the slot
             var item = new Item
             {
                 SlotID = model.SlotID,
-                ItemName = model.ItemName,
-                Price = model.Price,
-                AddedDate = DateTime.Now
+                Id = model.Id
             };
 
             // Add the item to the database
             _context.Items.Add(item);
             _context.SaveChanges(); // Save changes to persist the new item.
 
-            TempData["Message"] = $"Item '{item.ItemName}' added to Slot {slot.Name}.";
+            TempData["Message"] = $"Item '{item.Id}' added to Slot {slot.Name}.";
             return RedirectToAction("Index"); // Redirect back to the Index page.
         }
 
@@ -76,7 +82,6 @@ namespace StoreAnalysis.Controllers
         {
             var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
             if (slot == null) return NotFound();
-
             try
             {
                 // Log sales before deleting items
@@ -84,20 +89,19 @@ namespace StoreAnalysis.Controllers
                 {
                     var sale = new Sale
                     {
-                        ItemID = item.ItemID,
+                        ItemId = item.Id,
                         SaleDate = DateTime.Now
                     };
                     _context.Sales.Add(sale);
                 }
-
+                slot.Items.Clear();
+                var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
                 // Save sales first
                 _context.SaveChanges();
-
                 // Remove items and mark slot empty
-                _context.Items.RemoveRange(slot.Items);
+                _context.Items.RemoveRange(itemsList);
                 slot.IsEmpty = true;
                 _context.SaveChanges();
-
                 TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged.";
             }
             catch (Exception ex)

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using StoreAnalysis.Data;
 using StoreAnalysis.Models;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,7 +11,7 @@ namespace StoreAnalysis.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly StoreAnalysisContext _context;
         public static List<SlotCoordinate> GetSlots()
         {
             return new List<SlotCoordinate>
@@ -56,9 +58,9 @@ namespace StoreAnalysis.Controllers
 
             return emptySlots;
         }
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(StoreAnalysisContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
@@ -100,6 +102,13 @@ namespace StoreAnalysis.Controllers
                 // Analyze empty slots based on bounding boxes
                 emptySlots = AnalyzeSlots(boundingBoxes);
 
+                var slotsId = emptySlots.Select(name => _context.Slots.FirstOrDefault(_ => _.Name.Equals(name))?.SlotID).ToList();
+                if (slotsId != null) 
+                { 
+                    var list = slotsId.ToList();
+                }
+                
+
                 // Draw bounding boxes on the image
                 using (Image image = Image.FromFile(tempPath))
                 using (var graphics = Graphics.FromImage(image))
@@ -123,7 +132,7 @@ namespace StoreAnalysis.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error processing image: {ex.Message}");
+                Console.WriteLine($"Error processing image: {ex.Message}");
                 return StatusCode(500, "Error processing the image.");
             }
 
@@ -134,6 +143,40 @@ namespace StoreAnalysis.Controllers
                 emptySlots = emptySlots,  // Include the list of empty slots
                 image = Convert.ToBase64String(processedImage)  // Return image as base64 string
             });
+        }
+
+
+        public void EmptySlot(int slotId)
+        {
+            var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
+            if (slot == null) return;
+            try
+            {
+                // Log sales before deleting items
+                foreach (var item in slot.Items)
+                {
+                    var sale = new Sale
+                    {
+                        ItemId = item.Id,
+                        SaleDate = DateTime.Now
+                    };
+                    _context.Sales.Add(sale);
+                }
+                var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
+                // Save sales first
+                _context.SaveChanges();
+                // Remove items and mark slot empty
+                _context.Items.RemoveRange(itemsList);
+                slot.IsEmpty = true;
+                _context.SaveChanges();
+                TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged.";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                TempData["Message"] = "An error occurred while clearing the slot.";
+            }
+
         }
     }
 }

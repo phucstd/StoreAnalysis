@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StoreAnalysis.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -48,6 +48,20 @@ namespace StoreAnalysis.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Sales",
+                columns: table => new
+                {
+                    SaleId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sales", x => x.SaleId);
                 });
 
             migrationBuilder.CreateTable(
@@ -175,17 +189,12 @@ namespace StoreAnalysis.Migrations
                 name: "Items",
                 columns: table => new
                 {
-                    ItemID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ItemName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<float>(type: "real", nullable: false),
-                    AddedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     SlotID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Items", x => x.ItemID);
+                    table.PrimaryKey("PK_Items", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Items_Slots_SlotID",
                         column: x => x.SlotID,
@@ -195,25 +204,25 @@ namespace StoreAnalysis.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Sales",
+                name: "ItemsStorage",
                 columns: table => new
                 {
-                    SaleID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ItemID = table.Column<int>(type: "int", nullable: false),
-                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    TotalPrice = table.Column<float>(type: "real", nullable: false)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ItemName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Price = table.Column<float>(type: "real", nullable: false),
+                    AddedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SlotID = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sales", x => x.SaleID);
+                    table.PrimaryKey("PK_ItemsStorage", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Sales_Items_ItemID",
-                        column: x => x.ItemID,
-                        principalTable: "Items",
-                        principalColumn: "ItemID",
-                        onDelete: ReferentialAction.Cascade);
+                        name: "FK_ItemsStorage_Slots_SlotID",
+                        column: x => x.SlotID,
+                        principalTable: "Slots",
+                        principalColumn: "SlotID");
                 });
 
             migrationBuilder.CreateIndex(
@@ -261,9 +270,9 @@ namespace StoreAnalysis.Migrations
                 column: "SlotID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sales_ItemID",
-                table: "Sales",
-                column: "ItemID");
+                name: "IX_ItemsStorage_SlotID",
+                table: "ItemsStorage",
+                column: "SlotID");
         }
 
         /// <inheritdoc />
@@ -285,6 +294,12 @@ namespace StoreAnalysis.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Items");
+
+            migrationBuilder.DropTable(
+                name: "ItemsStorage");
+
+            migrationBuilder.DropTable(
                 name: "Sales");
 
             migrationBuilder.DropTable(
@@ -292,9 +307,6 @@ namespace StoreAnalysis.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "Items");
 
             migrationBuilder.DropTable(
                 name: "Slots");

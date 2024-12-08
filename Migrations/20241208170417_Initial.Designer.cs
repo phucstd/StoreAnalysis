@@ -12,8 +12,8 @@ using StoreAnalysis.Data;
 namespace StoreAnalysis.Migrations
 {
     [DbContext(typeof(StoreAnalysisContext))]
-    [Migration("20241201195958_remove-foreigh-key-in-sale")]
-    partial class removeforeighkeyinsale
+    [Migration("20241208170417_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -229,47 +229,68 @@ namespace StoreAnalysis.Migrations
 
             modelBuilder.Entity("StoreAnalysis.Models.Item", b =>
                 {
-                    b.Property<int>("ItemID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemID"));
-
-                    b.Property<DateTime>("AddedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ItemName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<float>("Price")
-                        .HasColumnType("real");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("SlotID")
                         .HasColumnType("int");
 
-                    b.HasKey("ItemID");
+                    b.HasKey("Id");
 
                     b.HasIndex("SlotID");
 
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("StoreAnalysis.Models.ItemStorage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("AddedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<float>("Price")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("SlotID")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SlotID");
+
+                    b.ToTable("ItemsStorage");
+                });
+
             modelBuilder.Entity("StoreAnalysis.Models.Sale", b =>
                 {
-                    b.Property<int>("SaleID")
+                    b.Property<int?>("SaleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SaleID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("SaleId"));
 
-                    b.Property<int>("ItemID")
-                        .HasColumnType("int");
+                    b.Property<string>("ItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("SaleDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("SaleID");
+                    b.HasKey("SaleId");
 
                     b.ToTable("Sales");
                 });
@@ -351,12 +372,19 @@ namespace StoreAnalysis.Migrations
             modelBuilder.Entity("StoreAnalysis.Models.Item", b =>
                 {
                     b.HasOne("StoreAnalysis.Models.Slot", "Slot")
-                        .WithMany("Items")
+                        .WithMany()
                         .HasForeignKey("SlotID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("StoreAnalysis.Models.ItemStorage", b =>
+                {
+                    b.HasOne("StoreAnalysis.Models.Slot", null)
+                        .WithMany("Items")
+                        .HasForeignKey("SlotID");
                 });
 
             modelBuilder.Entity("StoreAnalysis.Models.Slot", b =>

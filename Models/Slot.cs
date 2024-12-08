@@ -7,7 +7,7 @@
         public bool IsEmpty { get; set; } // Slot empty status
         public DateTime LastRefillDate { get; set; } // Last refill date
 
-        public ICollection<Item> Items { get; set; }
+        public ICollection<ItemStorage> Items { get; set; }
     }
 
 }

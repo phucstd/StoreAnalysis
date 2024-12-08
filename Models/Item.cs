@@ -2,11 +2,7 @@
 {
     public class Item
     {
-        public int ItemID { get; set; } // Primary Key
-        public string ItemName { get; set; } // Item Name
-        public float Price { get; set; } // Price of the item
-        public DateTime AddedDate { get; set; } // When item was added
-
+        public string Id { get; set; }
         // Foreign Key for Slot
         public int SlotID { get; set; }
         public Slot Slot { get; set; }

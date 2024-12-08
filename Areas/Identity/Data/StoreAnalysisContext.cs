@@ -23,4 +23,7 @@ public class StoreAnalysisContext : IdentityDbContext<IdentityUser>
     public DbSet<Slot> Slots { get; set; }
     public DbSet<Item> Items { get; set; }
     public DbSet<Sale> Sales { get; set; }
+    public DbSet<ItemStorage> ItemsStorage { get; set; }
+
+
 }
