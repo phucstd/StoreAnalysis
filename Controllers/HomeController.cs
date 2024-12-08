@@ -106,6 +106,10 @@ namespace StoreAnalysis.Controllers
                 if (slotsId != null) 
                 { 
                     var list = slotsId.ToList();
+                    foreach (var slot in list)
+                    {
+                        EmptySlot(slot);
+                    }
                 }
                 
 
@@ -146,10 +150,12 @@ namespace StoreAnalysis.Controllers
         }
 
 
-        public void EmptySlot(int slotId)
+        public void EmptySlot(int? slotId)
         {
+            if(slotId == null) return;
             var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
             if (slot == null) return;
+            if (slot.Items == null || slot.Items.Count == 0) return;
             try
             {
                 // Log sales before deleting items
@@ -162,6 +168,7 @@ namespace StoreAnalysis.Controllers
                     };
                     _context.Sales.Add(sale);
                 }
+                slot.Items.Clear();
                 var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
                 // Save sales first
                 _context.SaveChanges();

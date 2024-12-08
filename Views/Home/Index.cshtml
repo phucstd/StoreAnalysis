@@ -36,6 +36,12 @@
     </style>
 </head>
 <body>
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Message"]
+        </div>
+    }
     <h1>Upload Image for Analysis</h1>
     <form id="uploadForm" enctype="multipart/form-data">
         <label for="fileInput">Upload an Image:</label>
