@@ -43,14 +43,16 @@ namespace StoreAnalysis.Controllers
             var itemStorage = _context.ItemsStorage.FirstOrDefault(_ => _.Id.Equals(model.Id));
             if ( itemStorage == null)
             {
-                return NotFound();
+                TempData["Message"] = $"Item storage not found";
+                return RedirectToAction("Refill", new { slotId = model.SlotID });
             }
 
             // Fetch the slot by SlotID from the database.
             var slot = _context.Slots.FirstOrDefault(s => s.SlotID == model.SlotID);
             if (slot == null)
             {
-                return NotFound(); // If the slot is not found, return a NotFound result.
+                TempData["Message"] = $"Slot not found";
+                return RedirectToAction("Refill", new { slotId = model.SlotID }); // If the slot is not found, return a NotFound result.
             }
 
             // Update slot details

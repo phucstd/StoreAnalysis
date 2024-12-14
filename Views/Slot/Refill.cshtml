@@ -2,6 +2,13 @@
 
 <h2>Refill Slot @Model.SlotID</h2>
 
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Message"]
+    </div>
+}
+
 @using (Html.BeginForm("Refill", "Slot", FormMethod.Post))
 {
     @Html.AntiForgeryToken()
