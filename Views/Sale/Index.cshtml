@@ -1,5 +1,82 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewBag.Title = "Dashboard";
 }
+
+<h2>Dashboard</h2>
+
+<div>
+    <h3>Doanh thu theo tháng</h3>
+    <canvas id="revenueChart" width="400" height="200"></canvas>
+</div>
+
+<div>
+    <h3>Sản phẩm bán chạy</h3>
+    <canvas id="productSalesChart" width="400" height="200"></canvas>
+</div>
+
+<div>
+    <h3>Bán hàng theo giờ</h3>
+    <canvas id="hourlySalesChart" width="400" height="200"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 1. Biểu đồ doanh thu
+    fetch('/Sale/RevenueChart')
+        .then(response => response.json())
+        .then(data => {
+            var ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 1
+                    }]
+                }
+            });
+        });
+
+    // 2. Biểu đồ sản phẩm bán chạy
+    fetch('/Sale/ProductSalesChart')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            var ctx = document.getElementById('productSalesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.itemNames,
+                    datasets: [{
+                        data: data.quantities,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                }
+            });
+        });
+
+    // 3. Biểu đồ bán hàng theo giờ
+    fetch('/Sale/HourlySalesChart')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            var ctx = document.getElementById('hourlySalesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.hours,
+                    datasets: [{
+                        data: data.quantities,
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1
+                    }]
+                }
+            });
+        });
+</script>
