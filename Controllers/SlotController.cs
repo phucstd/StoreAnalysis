@@ -2,16 +2,18 @@
 using Microsoft.EntityFrameworkCore;
 using StoreAnalysis.Data;
 using StoreAnalysis.Models;
+using StoreAnalysis.Script;
 
 namespace StoreAnalysis.Controllers
 {
     public class SlotController : Controller
     {
         private readonly StoreAnalysisContext _context;
-
-        public SlotController(StoreAnalysisContext context)
+        private readonly TelegramService _telegramService;
+        public SlotController(StoreAnalysisContext context, TelegramService telegramService)
         {
             _context = context;
+            _telegramService = telegramService;
         }
 
         // GET: Display all slots
@@ -27,7 +29,7 @@ namespace StoreAnalysis.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Refill(RefillItemViewModel model)
+        public async Task<IActionResult> Refill(RefillItemViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -74,46 +76,17 @@ namespace StoreAnalysis.Controllers
             // Add the item to the database
             _context.Items.Add(item);
             _context.SaveChanges(); // Save changes to persist the new item.
-
-            TempData["Message"] = $"Item '{item.Id}' added to Slot {slot.Name}.";
+            var message = await SendMessage($"{itemStorage.Name} had been filled into  {slot.Name}");
+            TempData["Message"] = $"Item '{item.Id}' added to Slot {slot.Name}. \n{message}";
             return RedirectToAction("Index"); // Redirect back to the Index page.
         }
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EmptySlot(int slotId)
+        public async Task<IActionResult> EmptySlot(int slotId)
         {
-            var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
-            if (slot == null) return NotFound();
-            try
-            {
-                // Log sales before deleting items
-                foreach (var item in slot.Items)
-                {
-                    var sale = new Sale
-                    {
-                        ItemId = item.Id,
-                        SaleDate = DateTime.Now
-                    };
-                    _context.Sales.Add(sale);
-                }
-                slot.Items.Clear();
-                var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
-                // Save sales first
-                _context.SaveChanges();
-                // Remove items and mark slot empty
-                _context.Items.RemoveRange(itemsList);
-                slot.IsEmpty = true;
-                _context.SaveChanges();
-                TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged.";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                TempData["Message"] = "An error occurred while clearing the slot.";
-            }
-
+            await EmptySlotAndSendMessage(slotId);
             return RedirectToAction("Index");
         }
 
@@ -132,7 +105,62 @@ namespace StoreAnalysis.Controllers
             return View(model);
         }
 
-        
+        public async Task<string> SendMessage(string message)
+        {
+            try
+            {
+
+                var (success, returnMessage) = await _telegramService.SendMessageAsync(message);
+
+                if (success)
+                {
+                    return "Message sent successfully!";
+                }
+
+                return $"Failed to send the message. Error: {returnMessage}";
+            }
+            catch (Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
+        }
+        public async Task EmptySlotAndSendMessage(int? slotId)
+        {
+            if (slotId == null) return;
+            var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
+            if (slot == null) return;
+            if (slot.Items == null || slot.Items.Count == 0) return;
+            try
+            {
+                // Log sales before deleting items
+                foreach (var item in slot.Items)
+                {
+                    var sale = new Sale
+                    {
+                        ItemId = item.Id,
+                        SaleDate = DateTime.Now
+                    };
+                    _context.Sales.Add(sale);
+                    await SendMessage($"{item.ItemName} had been purchased of {slot.Name}");
+                }
+                slot.Items.Clear();
+                var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
+                // Save sales first
+                _context.SaveChanges();
+                // Remove items and mark slot empty
+                _context.Items.RemoveRange(itemsList);
+                slot.IsEmpty = true;
+                _context.SaveChanges();
+                var message = await SendMessage($"Slot {slot.Name} is empty please fill more items");
+                TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged. \n{message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                TempData["Message"] = "An error occurred while clearing the slot.";
+            }
+
+        }
 
     }
 

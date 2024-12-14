@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using StoreAnalysis.Data;
 using StoreAnalysis.Models;
+using StoreAnalysis.Script;
 using System.Diagnostics;
 using System.Drawing;
 using VendingAnalysis.Analysis;
@@ -12,6 +13,12 @@ namespace StoreAnalysis.Controllers
     public class HomeController : Controller
     {
         private readonly StoreAnalysisContext _context;
+        private readonly TelegramService _telegramService;
+        public HomeController(StoreAnalysisContext context, TelegramService telegramService)
+        {
+            _context = context;
+            _telegramService = telegramService;
+        }
         public static List<SlotCoordinate> GetSlots()
         {
             return new List<SlotCoordinate>
@@ -58,10 +65,7 @@ namespace StoreAnalysis.Controllers
 
             return emptySlots;
         }
-        public HomeController(StoreAnalysisContext context)
-        {
-            _context = context;
-        }
+        
 
         public IActionResult Index()
         {
@@ -150,7 +154,7 @@ namespace StoreAnalysis.Controllers
         }
 
 
-        public void EmptySlot(int? slotId)
+        public async void EmptySlot(int? slotId)
         {
             if(slotId == null) return;
             var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
@@ -167,6 +171,7 @@ namespace StoreAnalysis.Controllers
                         SaleDate = DateTime.Now
                     };
                     _context.Sales.Add(sale);
+                    await SendMessage($"{item.ItemName} had been purchased of {slot.Name}");
                 }
                 slot.Items.Clear();
                 var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
@@ -176,7 +181,8 @@ namespace StoreAnalysis.Controllers
                 _context.Items.RemoveRange(itemsList);
                 slot.IsEmpty = true;
                 _context.SaveChanges();
-                TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged.";
+                var message = await SendMessage($"Slot {slot.Name} is empty please fill more items");
+                TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged. \n{message}";
             }
             catch (Exception ex)
             {
@@ -184,6 +190,26 @@ namespace StoreAnalysis.Controllers
                 TempData["Message"] = "An error occurred while clearing the slot.";
             }
 
+        }
+
+        public async Task<string> SendMessage(string message)
+        {
+            try
+            {
+                
+                var (success, returnMessage) = await _telegramService.SendMessageAsync(message);
+
+                if (success)
+                {
+                    return "Message sent successfully!";
+                }
+
+                return $"Failed to send the message. Error: {returnMessage}";
+            }
+            catch (Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
         }
     }
 }
