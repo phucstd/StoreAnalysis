@@ -160,36 +160,26 @@ namespace StoreAnalysis.Controllers
             var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
             if (slot == null) return;
             if (slot.Items == null || slot.Items.Count == 0) return;
-            try
+            // Log sales before deleting items
+            foreach (var item in slot.Items)
             {
-                // Log sales before deleting items
-                foreach (var item in slot.Items)
+                var sale = new Sale
                 {
-                    var sale = new Sale
-                    {
-                        ItemId = item.Id,
-                        SaleDate = DateTime.Now
-                    };
-                    _context.Sales.Add(sale);
-                    await SendMessage($"{item.ItemName} had been purchased of {slot.Name}");
-                }
-                slot.Items.Clear();
-                var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
-                // Save sales first
-                _context.SaveChanges();
-                // Remove items and mark slot empty
-                _context.Items.RemoveRange(itemsList);
-                slot.IsEmpty = true;
-                _context.SaveChanges();
-                var message = await SendMessage($"Slot {slot.Name} is empty please fill more items");
-                TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged. \n{message}";
+                    ItemStorage = item,
+                    SaleDate = DateTime.Now
+                };
+                _context.Sales.Add(sale);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                TempData["Message"] = "An error occurred while clearing the slot.";
-            }
-
+            slot.Items.Clear();
+            var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
+            // Save sales first
+            _context.SaveChanges();
+            // Remove items and mark slot empty
+            _context.Items.RemoveRange(itemsList);
+            slot.IsEmpty = true;
+            _context.SaveChanges();
+            var message = await SendMessage($"[Employee]: Slot {slot.Name} is empty please fill more items");
+            TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged. \n{message}";
         }
 
         public async Task<string> SendMessage(string message)
