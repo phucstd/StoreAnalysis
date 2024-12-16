@@ -18,102 +18,109 @@ namespace StoreAnalysis.Controllers
         }
         public IActionResult Index()
         {
-            return View();
-        }
-        public ActionResult RevenueChart()
-        {
-            // Lấy ngày hiện tại và 6 ngày trước đó
-            var startDate = DateTime.Today.AddDays(-6);
-            var endDate = DateTime.Today;
+            // Lấy ngày hôm nay và tuần trước
+            var today = DateTime.Today;
+            var startOfThisWeek = today.AddDays(-(int)today.DayOfWeek);
+            var startOfLastWeek = startOfThisWeek.AddDays(-7);
 
-            var data = _context.Sales
-                .Join(
-                    _context.ItemsStorage,  // Bảng cần join
-                    sale => sale.ItemId,    // Khóa ngoại trong bảng Sales
-                    item => item.Id,        // Khóa chính trong bảng ItemsStorage
-                    (sale, item) => new     // Kết quả join
-                    {
-                        SaleDate = sale.SaleDate,
-                        Price = item.Price
-                    }
-                )
-                .Where(x => x.SaleDate.Date >= startDate && x.SaleDate.Date <= endDate) // Lọc theo ngày
-                .GroupBy(x => x.SaleDate.Date) // Nhóm theo từng ngày
-                .Select(g => new
-                {
-                    Day = g.Key,
-                    Revenue = g.Sum(x => x.Price) // Tổng doanh thu trong ngày
-                })
-                .OrderBy(x => x.Day) // Sắp xếp theo ngày
+            // Doanh thu tuần này
+            var thisWeekRevenue = _context.Sales
+                .Where(s => s.SaleDate.Date >= startOfThisWeek && s.SaleDate.Date <= today)
+                .Sum(s => s.ItemStorage.Price);
+
+            // Doanh thu tuần trước
+            var lastWeekRevenue = _context.Sales
+                .Where(s => s.SaleDate.Date >= startOfLastWeek && s.SaleDate.Date < startOfThisWeek)
+                .Sum(s => s.ItemStorage.Price);
+
+            // Tổng số lượng giao dịch tuần này
+            var thisWeekTotalSales = _context.Sales
+                .Count(s => s.SaleDate.Date >= startOfThisWeek && s.SaleDate.Date <= today);
+
+            // Tổng số lượng giao dịch tuần trước
+            var lastWeekTotalSales = _context.Sales
+                .Count(s => s.SaleDate.Date >= startOfLastWeek && s.SaleDate.Date < startOfThisWeek);
+
+            // Doanh thu gần đây
+            var recentSales = _context.Sales
+                .Include(s => s.ItemStorage)
+                .OrderByDescending(s => s.SaleDate)
+                .Take(10)
                 .ToList();
 
-            // Chuyển đổi dữ liệu thành ViewModel
-            var model = new RevenueChartViewModel
-            {
-                Labels = data.Select(x => x.Day.ToString("d MMM")).ToArray(), // Hiển thị ngày
-                Data = data.Select(x => x.Revenue).ToArray() // Doanh thu theo ngày
-            };
-
-            return Json(model);
-        }
-
-
-        // 2. Biểu đồ sản phẩm bán chạy
-        public ActionResult ProductSalesChart()
-        {
-            var data = _context.Sales
-                .GroupBy(s => s.ItemId)
+            // Biểu đồ sản phẩm bán chạy
+            var productSalesData = _context.Sales
+                .GroupBy(s => s.ItemStorage)
                 .Select(g => new
                 {
-                    ItemName = _context.ItemsStorage.FirstOrDefault(i => i.Id == g.Key).ItemName,
-                    Quantity = g.Count()
+                    ItemName = g.Key.ItemName,
+                    Quantity = g.Count(),
+                    Price = g.Key.Price,
+                    TotalPrice = g.Sum(s => g.Key.Price)
                 })
                 .OrderByDescending(x => x.Quantity)
                 .ToList();
 
-            var model = new ProductSalesChartViewModel
+            var productSalesChartViewModel = new ProductSalesChartViewModel
             {
-                ItemNames = data.Select(x => x.ItemName).ToArray(),
-                Quantities = data.Select(x => x.Quantity).ToArray()
+                ItemNames = productSalesData.Select(x => x.ItemName).ToArray(),
+                Quantities = productSalesData.Select(x => x.Quantity).ToArray(),
+                Price = productSalesData.Select(x => x.Price).ToArray(),
+                TotalPrice = productSalesData.Select(x => x.TotalPrice).ToArray()
             };
 
-            return Json(model);
-        }
+            // Tính toán tăng trưởng
+            var growingRevenuePercentCompareLastWeek = lastWeekRevenue > 0 ? ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100
+                : 100;
 
+            var growingTotalSalesPercentCompareLastWeek = lastWeekTotalSales > 0
+                ? ((thisWeekTotalSales - lastWeekTotalSales) / (float)lastWeekTotalSales) * 100
+                : 100;
+
+            // Tạo SaleViewModel
+            var saleViewModel = new SaleViewModel
+            {
+                TotalSales = thisWeekTotalSales,
+                GrowingTotalSalesPercentCompareLastWeek = growingTotalSalesPercentCompareLastWeek,
+                Revenue = thisWeekRevenue,
+                GrowingRevenuePercentCompareLastWeek = growingRevenuePercentCompareLastWeek,
+                productSalesChartViewModel = productSalesChartViewModel,
+                RecentSales = recentSales,
+            };
+
+            return View(saleViewModel);
+        }
         public ActionResult HourlySalesChart()
         {
-            // Lấy ngày hiện tại và giờ hiện tại
             var today = DateTime.Today;
-            var currentHour = DateTime.Now.Hour;
 
-            // Lọc dữ liệu trong ngày hiện tại
-            var salesToday = _context.Sales
-                .Where(s => s.SaleDate.Date == today) // Chỉ lấy giao dịch của ngày hôm nay
-                .GroupBy(s => s.SaleDate.Hour) // Nhóm theo giờ
+            // Get sales data grouped by hour
+            var hourlySalesData = _context.Sales
+                .Where(s => s.SaleDate.Date == today) // Filter sales for today
+                .GroupBy(s => s.SaleDate.Hour)
                 .Select(g => new
                 {
                     Hour = g.Key,
-                    Quantity = g.Count() // Tổng số lượng bán được trong giờ đó
+                    Quantity = g.Count(),
+                    Revenue = g.Sum(s => s.ItemStorage.Price)
                 })
-                .ToDictionary(g => g.Hour, g => g.Quantity); // Lưu vào Dictionary để tra cứu nhanh
+                .ToDictionary(g => g.Hour);
 
-            // Tạo danh sách từ 0h đến giờ hiện tại
-            var data = Enumerable.Range(0, currentHour + 1)
-                .Select(hour => new
-                {
-                    Hour = hour,
-                    Quantity = salesToday.ContainsKey(hour) ? salesToday[hour] : 0 // Gán 0 nếu không có giao dịch
-                })
-                .ToList();
-
-            // Tạo ViewModel
-            var model = new HourlySalesChartViewModel
+            // Generate hourly chart model with DateTime for ApexCharts
+            var hourlySalesAndRevenueChartModel = new HourlySalesAndRevenueChartViewModel
             {
-                Hours = data.Select(x => $"{x.Hour}:00").ToArray(), // Chuyển giờ thành định dạng "0:00"
-                Quantities = data.Select(x => x.Quantity).ToArray() // Số lượng bán theo giờ
+                Hours = Enumerable.Range(0, DateTime.Now.Hour + 1)
+                    .Select(h => today.AddHours(h)) // Create DateTime for each hour
+                    .ToArray(),
+                Quantities = Enumerable.Range(0, DateTime.Now.Hour + 1)
+                    .Select(h => hourlySalesData.ContainsKey(h) ? hourlySalesData[h].Quantity : 0)
+                    .ToArray(),
+                Revenue = Enumerable.Range(0, DateTime.Now.Hour + 1)
+                    .Select(h => hourlySalesData.ContainsKey(h) ? hourlySalesData[h].Revenue : 0)
+                    .ToArray()
             };
 
-            return Json(model);
+            return Json(hourlySalesAndRevenueChartModel);
         }
 
     }

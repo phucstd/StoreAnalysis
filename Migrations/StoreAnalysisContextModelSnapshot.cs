@@ -280,14 +280,16 @@ namespace StoreAnalysis.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("SaleId"));
 
-                    b.Property<string>("ItemId")
+                    b.Property<string>("ItemStorageId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("SaleDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("SaleId");
+
+                    b.HasIndex("ItemStorageId");
 
                     b.ToTable("Sales");
                 });
@@ -382,6 +384,17 @@ namespace StoreAnalysis.Migrations
                     b.HasOne("StoreAnalysis.Models.Slot", null)
                         .WithMany("Items")
                         .HasForeignKey("SlotID");
+                });
+
+            modelBuilder.Entity("StoreAnalysis.Models.Sale", b =>
+                {
+                    b.HasOne("StoreAnalysis.Models.ItemStorage", "ItemStorage")
+                        .WithMany()
+                        .HasForeignKey("ItemStorageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ItemStorage");
                 });
 
             modelBuilder.Entity("StoreAnalysis.Models.Slot", b =>

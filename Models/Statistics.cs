@@ -10,11 +10,30 @@
     {
         public string[] ItemNames { get; set; } // Tên sản phẩm
         public int[] Quantities { get; set; }  // Số lượng bán
+
+        public float[] Price; 
+        public float[] TotalPrice { get; set; }
     }
 
-    public class HourlySalesChartViewModel
+    public class HourlySalesAndRevenueChartViewModel
     {
-        public string[] Hours { get; set; } // Giờ (00:00, 01:00, ...)
+        public DateTime[] Hours { get; set; } // Time with DateTime format
         public int[] Quantities { get; set; }  // Số lượng bán mỗi giờ
+
+        public float[] Revenue { get; set; }
+    }
+
+    public class SaleViewModel()
+    {
+        public int TotalSales { get; set; }
+        public float GrowingTotalSalesPercentCompareLastWeek { get; set; }
+        public float Revenue { get; set; }
+
+        public float GrowingRevenuePercentCompareLastWeek {  get; set; }
+
+        public List<Sale> RecentSales { get; set; }
+
+        public ProductSalesChartViewModel productSalesChartViewModel { get; set; }
+
     }
 }

@@ -137,7 +137,7 @@ namespace StoreAnalysis.Controllers
                 {
                     var sale = new Sale
                     {
-                        ItemId = item.Id,
+                        ItemStorage = item,
                         SaleDate = DateTime.Now
                     };
                     _context.Sales.Add(sale);
