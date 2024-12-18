@@ -35,5 +35,7 @@
 
         public ProductSalesChartViewModel productSalesChartViewModel { get; set; }
 
+        public List<Notification> notifications { get; set; }
+
     }
 }

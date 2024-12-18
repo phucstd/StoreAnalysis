@@ -178,16 +178,16 @@ namespace StoreAnalysis.Controllers
             _context.Items.RemoveRange(itemsList);
             slot.IsEmpty = true;
             _context.SaveChanges();
-            var message = await SendMessage($"[Employee]: Slot {slot.Name} is empty please fill more items");
+            var message = await SendMessage(new Notification($"Slot {slot.Name} is empty please fill more items", "Employee" , 5));
             TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged. \n{message}";
         }
 
-        public async Task<string> SendMessage(string message)
+        public async Task<string> SendMessage(Notification message)
         {
             try
             {
                 
-                var (success, returnMessage) = await _telegramService.SendMessageAsync(message);
+                var (success, returnMessage) = await _telegramService.SendMessageAsync(message, _context);
 
                 if (success)
                 {

@@ -7,6 +7,7 @@
         public string Description { get; set; }
         public string ItemName { get; set; } // Item Name
         public float Price { get; set; } // Price of the item
-        public DateTime AddedDate { get; set; } // When item was added
+        public DateTime LastUpdatedDate { get; set; }
+        public int Amount { get; set; }
     }
 }

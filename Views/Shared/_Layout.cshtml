@@ -37,6 +37,21 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/StoreAnalysis.styles.css" asp-append-version="true" />
 </head> *@
+@{
+    string pageName = "";
+    switch (ViewContext.RouteData.Values["controller"]?.ToString())
+    {
+        case "Slot":
+            pageName = "Product Management";
+            break;
+        case "Sale":
+            pageName = "Dashboard";
+            break;
+        case "Home":
+            pageName = "Analysis Input";
+            break;
+    }
+}
 <body>
     <!-- ======= Header ======= -->
     <header id="header" class="header fixed-top d-flex align-items-center">
@@ -126,6 +141,13 @@
                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "" : "collapsed")" asp-controller="Home" asp-action="Index">
                     <i class="bi bi-file-earmark"></i>
                     <span>Analysis Input</span>
+                </a>
+            </li><!-- End Blank Page Nav -->
+
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Slot" ? "" : "collapsed")" asp-controller="Slot" asp-action="Index">
+                    <i class="bi bi-menu-button-wide"></i>
+                    <span>Product Management</span>
                 </a>
             </li><!-- End Blank Page Nav -->
 
@@ -378,7 +400,20 @@
             @RenderBody()
         </main>
     </div>*@
-    @RenderBody()
+    <main id="main" class="main">
+
+        <div class="pagetitle">
+            <h1>@pageName</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active">@pageName</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+        @RenderBody()
+    </main>
+    
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

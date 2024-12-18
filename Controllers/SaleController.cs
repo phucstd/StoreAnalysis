@@ -86,6 +86,8 @@ namespace StoreAnalysis.Controllers
                 GrowingRevenuePercentCompareLastWeek = growingRevenuePercentCompareLastWeek,
                 productSalesChartViewModel = productSalesChartViewModel,
                 RecentSales = recentSales,
+                notifications = _context.Notifications.OrderByDescending(s => s.CreatedDate).Take(5).ToList()
+
             };
 
             return View(saleViewModel);

@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using StoreAnalysis.Data;
+using StoreAnalysis.Models;
+using System.Text;
 
 namespace StoreAnalysis.Script
 {
@@ -16,7 +18,7 @@ namespace StoreAnalysis.Script
             _chatId = chatId;
         }
 
-        public async Task<(bool success, string message)> SendMessageAsync(string message)
+        public async Task<(bool success, string message)> SendMessageAsync(Notification message, StoreAnalysisContext context)
         {
             try
             {
@@ -25,7 +27,7 @@ namespace StoreAnalysis.Script
                 var payload = new
                 {
                     chat_id = _chatId,
-                    text = message
+                    text = message.Content
                 };
 
                 var jsonContent = System.Text.Json.JsonSerializer.Serialize(payload);
@@ -36,7 +38,11 @@ namespace StoreAnalysis.Script
 
                 Console.WriteLine($"Response Status: {response.StatusCode}");
                 Console.WriteLine($"Response Content: {responseContent}");
-
+                if(response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    context.Notifications.Add(message);
+                    await context.SaveChangesAsync();
+                }
                 return (response.IsSuccessStatusCode, responseContent);
             }
             catch (Exception ex)
@@ -46,4 +52,5 @@ namespace StoreAnalysis.Script
             }
         }
     }
+
 }

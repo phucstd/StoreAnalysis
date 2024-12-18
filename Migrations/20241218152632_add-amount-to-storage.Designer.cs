@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StoreAnalysis.Data;
 
@@ -11,9 +12,11 @@ using StoreAnalysis.Data;
 namespace StoreAnalysis.Migrations
 {
     [DbContext(typeof(StoreAnalysisContext))]
-    partial class StoreAnalysisContextModelSnapshot : ModelSnapshot
+    [Migration("20241218152632_add-amount-to-storage")]
+    partial class addamounttostorage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -273,33 +276,6 @@ namespace StoreAnalysis.Migrations
                     b.HasIndex("SlotID");
 
                     b.ToTable("ItemsStorage");
-                });
-
-            modelBuilder.Entity("StoreAnalysis.Models.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("StoreAnalysis.Models.Sale", b =>

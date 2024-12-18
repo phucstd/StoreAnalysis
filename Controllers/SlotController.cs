@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StoreAnalysis.Data;
 using StoreAnalysis.Models;
@@ -76,7 +78,7 @@ namespace StoreAnalysis.Controllers
             // Add the item to the database
             _context.Items.Add(item);
             _context.SaveChanges(); // Save changes to persist the new item.
-            var message = await SendMessage($"{itemStorage.Name} had been filled into  {slot.Name}");
+            var message = await SendMessage(new Notification($"{itemStorage.Name} had been filled into  {slot.Name}", "All", 1));
             TempData["Message"] = $"Item '{item.Id}' added to Slot {slot.Name}. \n{message}";
             return RedirectToAction("Index"); // Redirect back to the Index page.
         }
@@ -105,12 +107,12 @@ namespace StoreAnalysis.Controllers
             return View(model);
         }
 
-        public async Task<string> SendMessage(string message)
+        public async Task<string> SendMessage(Notification message)
         {
             try
             {
 
-                var (success, returnMessage) = await _telegramService.SendMessageAsync(message);
+                var (success, returnMessage) = await _telegramService.SendMessageAsync(message,_context);
 
                 if (success)
                 {
@@ -141,7 +143,7 @@ namespace StoreAnalysis.Controllers
                         SaleDate = DateTime.Now
                     };
                     _context.Sales.Add(sale);
-                    await SendMessage($"{item.ItemName} had been purchased of {slot.Name}");
+                    await SendMessage(new Notification($"{item.ItemName} had been purchased of {slot.Name}", "All", 2));
                 }
                 slot.Items.Clear();
                 var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
@@ -151,7 +153,7 @@ namespace StoreAnalysis.Controllers
                 _context.Items.RemoveRange(itemsList);
                 slot.IsEmpty = true;
                 _context.SaveChanges();
-                var message = await SendMessage($"Slot {slot.Name} is empty please fill more items");
+                var message = await SendMessage(new Notification($"Slot {slot.Name} is empty please fill more items", "All", 5));
                 TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged. \n{message}";
             }
             catch (Exception ex)
