@@ -1,59 +1,96 @@
 ﻿@model IEnumerable<StoreAnalysis.Models.Slot>
 
-<h2>Slot List</h2>
-
 @if (TempData["Message"] != null)
 {
     <div class="alert alert-success">
         @TempData["Message"]
     </div>
 }
+<body>
+    <div class="col-lg-10"
+        <div class="card"
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope ="col">Name</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Last Refill</th>
+                            <th scope="col">Current Items</th>
+                            <th scope="col">Refill</th>
+                            <th scope="col">Empty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var slot in Model)
+                        {
+                            <tr>
+                                <td scope="row">@slot.Name</td>
+                                <td>
+                                    @if (slot.IsEmpty)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-octagon me-1"></i> Empty</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Occupied</span>
+                                    }
+                                </td>
+                                <td>@slot.LastRefillDate.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    @if (slot.Items != null && slot.Items.Any())
+                                    {
+                                        <ul>
+                                            @foreach (var item in slot.Items)
+                                            {
+                                                <li>
+                                                    <strong>@item.ItemName</strong> -
+                                                    Price: @item.Price.ToString("C")
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                    else
+                                    {
+                                        <span>No items</span>
+                                    }
+                                </td>
+                                <td>
+                                        <input type="hidden" name="slotId" value="@slot.SlotID" />
+                                        @if (slot.IsEmpty)
+                                        {
+                                            <button class="btn btn-success" onclick="window.location.href='@Url.Action("Refill", "Slot", new { slotId = slot.SlotID })'">Refill</button>
+                                            
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-outline-success" disabled="" >Refill</button>
+                                        }
+                                    
+                                </td>
+                                <td>
+                                    @using (Html.BeginForm("EmptySlot", "Slot", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="slotId" value="@slot.SlotID" />
+                                        @if(slot.IsEmpty)
+                                        {
+                                               <button type="submit" class="btn btn-outline-danger" disabled="">Empty</button>
+                                        }
+                                        else
+                                        {
+                                               <button type="submit" class="btn btn-danger" >Empty</button>
+                                        }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Last Refill</th>
-            <th>Current Items</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var slot in Model)
-        {
-            <tr>
-                <td>@slot.Name</td>
-                <td>@(slot.IsEmpty ? "Empty" : "Occupied")</td>
-                <td>@slot.LastRefillDate.ToString("yyyy-MM-dd")</td>
-                <td>
-                    @if (slot.Items != null && slot.Items.Any())
-                    {
-                        <ul>
-                            @foreach (var item in slot.Items)
-                            {
-                                <li>
-                                    <strong>@item.ItemName</strong> -
-                                    Price: @item.Price.ToString("C")
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <span>No items</span>
-                    }
-                </td>
-                <td>
-                    <a href="@Url.Action("Refill", "Slot", new { slotId = slot.SlotID })" class="btn btn-success">Refill</a>
-                    @using (Html.BeginForm("EmptySlot", "Slot", FormMethod.Post))
-                    {
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="slotId" value="@slot.SlotID" />
-                        <button type="submit" class="btn btn-danger">Empty</button>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                                }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+
