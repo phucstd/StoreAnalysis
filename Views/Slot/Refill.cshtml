@@ -1,24 +1,106 @@
 ﻿@model StoreAnalysis.Models.RefillItemViewModel
 
-<h2>Refill Slot @Model.SlotID</h2>
+<section class="section">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"> Slot @ViewBag.Slot.Name - Current Items </h5>
+                    <h6>Status : 
+                        @if (ViewBag.Slot.IsEmpty)
+                        {
+                            <span class="badge bg-danger"><i class="bi bi-exclamation-octagon me-1"></i> Empty</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Occupied</span>
+                        }
+                    </h6>
+                    
+                    <br />
+                   
+                    <ul class="list-group">
+                        @if (ViewBag.Slot.Items != null)
+                        {
+                            @foreach (var item in ViewBag.Slot.Items)
+                            {
 
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["Message"]
+                                <li class="list-group-item">
+                                    <strong>@item.Name</strong>
+                                    -
+                                    Price: @item.Price.ToString("C")
+                                </li>
+                            }
+                        }
+                    </ul>
+                    <br />
+                    <a class="btn btn-secondary" asp-controller="Slot" asp-action="Index">Back</a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Refilling @ViewBag.Slot.Name</h5>
+                    @using (Html.BeginForm("Refill", "Slot", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        @Html.HiddenFor(m => m.SlotID)
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Id)
+                            @Html.TextBoxFor(m => m.Id, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Id, "", new { @class = "text-danger" })
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-primary">Add Items</button>
+                    }
+
+                    @if (TempData["Message"] != null)
+                    {
+                        <br></br>
+                        if (TempData["Status"] != null)
+                        {
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-octagon me-1"></i>
+                                @TempData["Message"]
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-octagon me-1"></i>
+                                @TempData["Message"]
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Current Storage</h5>
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
+                                <th scope="col">Id</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Available</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in ViewBag.AvailableItems)
+                            {
+                                <tr>
+                                    <th scope="row">@item.Id</th>
+                                    <td>@item.Name</td>
+                                    <td>@item.Amount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-}
-
-@using (Html.BeginForm("Refill", "Slot", FormMethod.Post))
-{
-    @Html.AntiForgeryToken()
-
-    @Html.HiddenFor(m => m.SlotID)
-
-    <div class="form-group">
-        @Html.LabelFor(m => m.Id)
-        @Html.TextBoxFor(m => m.Id, new { @class = "form-control" })
-        @Html.ValidationMessageFor(m => m.Id, "", new { @class = "text-danger" })
-    </div>
-    <button type="submit" class="btn btn-primary">Add Items</button>
-}
+</section>

@@ -53,7 +53,7 @@ namespace StoreAnalysis.Controllers
                 .GroupBy(s => s.ItemStorage)
                 .Select(g => new
                 {
-                    ItemName = g.Key.ItemName,
+                    ItemName = g.Key.Name,
                     Quantity = g.Count(),
                     Price = g.Key.Price,
                     TotalPrice = g.Sum(s => g.Key.Price)

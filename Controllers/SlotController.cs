@@ -51,6 +51,12 @@ namespace StoreAnalysis.Controllers
                 return RedirectToAction("Refill", new { slotId = model.SlotID });
             }
 
+            if (itemStorage.Amount <= 0)
+            {
+                TempData["Message"] = $"Item in storage is out of stock";
+                return RedirectToAction("Refill", new { slotId = model.SlotID });
+            }
+
             // Fetch the slot by SlotID from the database.
             var slot = _context.Slots.FirstOrDefault(s => s.SlotID == model.SlotID);
             if (slot == null)
@@ -67,7 +73,7 @@ namespace StoreAnalysis.Controllers
                 slot.Items = new List<ItemStorage>();
             }
             slot.Items.Add(itemStorage);
-
+            itemStorage.Amount--;
             // Add new item to the slot
             var item = new Item
             {
@@ -77,10 +83,11 @@ namespace StoreAnalysis.Controllers
 
             // Add the item to the database
             _context.Items.Add(item);
-            _context.SaveChanges(); // Save changes to persist the new item.
+            await _context.SaveChangesAsync(); // Save changes to persist the new item.
             var message = await SendMessage(new Notification($"{itemStorage.Name} had been filled into  {slot.Name}", "All", 1));
             TempData["Message"] = $"Item '{item.Id}' added to Slot {slot.Name}. \n{message}";
-            return RedirectToAction("Index"); // Redirect back to the Index page.
+            TempData["Status"] = "Success";
+            return RedirectToAction("Refill", new { slotId = model.SlotID });
         }
 
 
@@ -98,10 +105,12 @@ namespace StoreAnalysis.Controllers
         {
             var slot = _context.Slots.FirstOrDefault(s => s.SlotID == slotId);
             if (slot == null) return NotFound();
-
+            ViewBag.Slot = slot;
+            ViewBag.AvailableItems = _context.ItemsStorage.Where(i => i.Amount > 0).ToList(); // Fetch items with Amount > 0
             var model = new RefillItemViewModel
             {
                 SlotID = slot.SlotID
+                
             };
 
             return View(model);
@@ -143,7 +152,7 @@ namespace StoreAnalysis.Controllers
                         SaleDate = DateTime.Now
                     };
                     _context.Sales.Add(sale);
-                    await SendMessage(new Notification($"{item.ItemName} had been purchased of {slot.Name}", "All", 2));
+                    await SendMessage(new Notification($"{item.Name} had been purchased of {slot.Name}", "All", 2));
                 }
                 slot.Items.Clear();
                 var itemsList = _context.Items.Where(_ => _.SlotID == slotId);

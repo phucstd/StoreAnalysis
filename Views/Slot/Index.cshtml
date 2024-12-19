@@ -44,7 +44,7 @@
                                             @foreach (var item in slot.Items)
                                             {
                                                 <li>
-                                                    <strong>@item.ItemName</strong> -
+                                                    <strong>@item.Name</strong> -
                                                     Price: @item.Price.ToString("C")
                                                 </li>
                                             }
@@ -57,15 +57,7 @@
                                 </td>
                                 <td>
                                         <input type="hidden" name="slotId" value="@slot.SlotID" />
-                                        @if (slot.IsEmpty)
-                                        {
-                                            <button class="btn btn-success" onclick="window.location.href='@Url.Action("Refill", "Slot", new { slotId = slot.SlotID })'">Refill</button>
-                                            
-                                        }
-                                        else
-                                        {
-                                            <button class="btn btn-outline-success" disabled="" >Refill</button>
-                                        }
+                                        <button class="btn btn-success" onclick="window.location.href='@Url.Action("Refill", "Slot", new { slotId = slot.SlotID })'">Refill</button>
                                     
                                 </td>
                                 <td>
