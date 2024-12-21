@@ -1,4 +1,4 @@
-INSERT INTO Items (Id, SlotID)
+INSERT INTO Items (ItemId, SlotID)
 VALUES
     ('SKU001', 1),
     ('SKU002', 1),

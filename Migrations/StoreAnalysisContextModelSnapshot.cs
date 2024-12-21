@@ -226,8 +226,15 @@ namespace StoreAnalysis.Migrations
 
             modelBuilder.Entity("StoreAnalysis.Models.Item", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SlotID")
                         .HasColumnType("int");
@@ -261,12 +268,7 @@ namespace StoreAnalysis.Migrations
                     b.Property<float>("Price")
                         .HasColumnType("real");
 
-                    b.Property<int?>("SlotID")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("SlotID");
 
                     b.ToTable("ItemsStorage");
                 });
@@ -405,13 +407,6 @@ namespace StoreAnalysis.Migrations
                     b.Navigation("Slot");
                 });
 
-            modelBuilder.Entity("StoreAnalysis.Models.ItemStorage", b =>
-                {
-                    b.HasOne("StoreAnalysis.Models.Slot", null)
-                        .WithMany("Items")
-                        .HasForeignKey("SlotID");
-                });
-
             modelBuilder.Entity("StoreAnalysis.Models.Sale", b =>
                 {
                     b.HasOne("StoreAnalysis.Models.ItemStorage", "ItemStorage")
@@ -421,11 +416,6 @@ namespace StoreAnalysis.Migrations
                         .IsRequired();
 
                     b.Navigation("ItemStorage");
-                });
-
-            modelBuilder.Entity("StoreAnalysis.Models.Slot", b =>
-                {
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

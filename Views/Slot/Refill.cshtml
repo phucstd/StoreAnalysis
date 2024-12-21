@@ -20,17 +20,14 @@
                     <br />
                    
                     <ul class="list-group">
-                        @if (ViewBag.Slot.Items != null)
+                        @foreach (var item in ViewBag.SlotItems)
                         {
-                            @foreach (var item in ViewBag.Slot.Items)
-                            {
 
-                                <li class="list-group-item">
-                                    <strong>@item.Name</strong>
-                                    -
-                                    Price: @item.Price.ToString("C")
-                                </li>
-                            }
+                            <li class="list-group-item">
+                                <strong>@item.Name</strong>
+                                -
+                                Price: @item.Price.ToString("C")
+                            </li>
                         }
                     </ul>
                     <br />

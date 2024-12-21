@@ -26,5 +26,15 @@ public class StoreAnalysisContext : IdentityDbContext<IdentityUser>
     public DbSet<ItemStorage> ItemsStorage { get; set; }
     public DbSet<Notification> Notifications { get; set; }
 
+    public List<ItemStorage> GetItemsOnSlot(int slotId)
+    {
 
+        var itemIds = Items.Where(_ => _.SlotID.Equals(slotId)).Select(_ => _.ItemId);
+        List<ItemStorage> items = new List<ItemStorage>();
+        foreach (var id in itemIds)
+        {
+            items.Add(ItemsStorage.FirstOrDefault(_ => _.Id.Equals(id)));
+        }
+        return items;
+    }
 }

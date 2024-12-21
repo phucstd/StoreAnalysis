@@ -12,8 +12,8 @@ using StoreAnalysis.Data;
 namespace StoreAnalysis.Migrations
 {
     [DbContext(typeof(StoreAnalysisContext))]
-    [Migration("20241208170417_Initial")]
-    partial class Initial
+    [Migration("20241221165942_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -229,8 +229,15 @@ namespace StoreAnalysis.Migrations
 
             modelBuilder.Entity("StoreAnalysis.Models.Item", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SlotID")
                         .HasColumnType("int");
@@ -247,16 +254,15 @@ namespace StoreAnalysis.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("AddedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ItemName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("LastUpdatedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -265,14 +271,36 @@ namespace StoreAnalysis.Migrations
                     b.Property<float>("Price")
                         .HasColumnType("real");
 
-                    b.Property<int?>("SlotID")
+                    b.HasKey("Id");
+
+                    b.ToTable("ItemsStorage");
+                });
+
+            modelBuilder.Entity("StoreAnalysis.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SlotID");
-
-                    b.ToTable("ItemsStorage");
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("StoreAnalysis.Models.Sale", b =>
@@ -283,14 +311,16 @@ namespace StoreAnalysis.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("SaleId"));
 
-                    b.Property<string>("ItemId")
+                    b.Property<string>("ItemStorageId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("SaleDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("SaleId");
+
+                    b.HasIndex("ItemStorageId");
 
                     b.ToTable("Sales");
                 });
@@ -380,16 +410,15 @@ namespace StoreAnalysis.Migrations
                     b.Navigation("Slot");
                 });
 
-            modelBuilder.Entity("StoreAnalysis.Models.ItemStorage", b =>
+            modelBuilder.Entity("StoreAnalysis.Models.Sale", b =>
                 {
-                    b.HasOne("StoreAnalysis.Models.Slot", null)
-                        .WithMany("Items")
-                        .HasForeignKey("SlotID");
-                });
+                    b.HasOne("StoreAnalysis.Models.ItemStorage", "ItemStorage")
+                        .WithMany()
+                        .HasForeignKey("ItemStorageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-            modelBuilder.Entity("StoreAnalysis.Models.Slot", b =>
-                {
-                    b.Navigation("Items");
+                    b.Navigation("ItemStorage");
                 });
 #pragma warning restore 612, 618
         }

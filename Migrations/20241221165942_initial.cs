@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StoreAnalysis.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,17 +51,35 @@ namespace StoreAnalysis.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Sales",
+                name: "ItemsStorage",
                 columns: table => new
                 {
-                    SaleId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ItemId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Price = table.Column<float>(type: "real", nullable: false),
+                    LastUpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Amount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sales", x => x.SaleId);
+                    table.PrimaryKey("PK_ItemsStorage", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -186,10 +204,32 @@ namespace StoreAnalysis.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Sales",
+                columns: table => new
+                {
+                    SaleId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ItemStorageId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sales", x => x.SaleId);
+                    table.ForeignKey(
+                        name: "FK_Sales_ItemsStorage_ItemStorageId",
+                        column: x => x.ItemStorageId,
+                        principalTable: "ItemsStorage",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Items",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SlotID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -201,28 +241,6 @@ namespace StoreAnalysis.Migrations
                         principalTable: "Slots",
                         principalColumn: "SlotID",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ItemsStorage",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ItemName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Price = table.Column<float>(type: "real", nullable: false),
-                    AddedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SlotID = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ItemsStorage", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ItemsStorage_Slots_SlotID",
-                        column: x => x.SlotID,
-                        principalTable: "Slots",
-                        principalColumn: "SlotID");
                 });
 
             migrationBuilder.CreateIndex(
@@ -270,9 +288,9 @@ namespace StoreAnalysis.Migrations
                 column: "SlotID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemsStorage_SlotID",
-                table: "ItemsStorage",
-                column: "SlotID");
+                name: "IX_Sales_ItemStorageId",
+                table: "Sales",
+                column: "ItemStorageId");
         }
 
         /// <inheritdoc />
@@ -297,7 +315,7 @@ namespace StoreAnalysis.Migrations
                 name: "Items");
 
             migrationBuilder.DropTable(
-                name: "ItemsStorage");
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "Sales");
@@ -310,6 +328,9 @@ namespace StoreAnalysis.Migrations
 
             migrationBuilder.DropTable(
                 name: "Slots");
+
+            migrationBuilder.DropTable(
+                name: "ItemsStorage");
         }
     }
 }

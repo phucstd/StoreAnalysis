@@ -21,11 +21,17 @@ namespace StoreAnalysis.Controllers
         // GET: Display all slots
         public IActionResult Index()
         {
-            var slots = _context.Slots
-                .Include(s => s.Items) // Include related items
-                .ToList();
-
-            return View(slots);
+            var slots = _context.Slots.ToList();
+            var model = new List<SlotViewModel>();
+            foreach(var slot in slots)
+            {
+                model.Add(new SlotViewModel
+                {
+                    Slot = slot,
+                    Items = _context.GetItemsOnSlot(slot.SlotID)
+                });
+            }
+            return View(model);
         }
 
 
@@ -68,24 +74,23 @@ namespace StoreAnalysis.Controllers
             // Update slot details
             slot.IsEmpty = false;
             slot.LastRefillDate = DateTime.Now;
-            if(slot.Items == null)
-            {
-                slot.Items = new List<ItemStorage>();
-            }
-            slot.Items.Add(itemStorage);
             itemStorage.Amount--;
+            if(itemStorage.Amount <= 0)
+            {
+                await SendMessage(message: new Notification($"Add more {itemStorage.Name} to storage", "Distributor", 3));
+            }
             // Add new item to the slot
             var item = new Item
             {
                 SlotID = model.SlotID,
-                Id = model.Id
+                ItemId = model.Id
             };
 
             // Add the item to the database
             _context.Items.Add(item);
             await _context.SaveChangesAsync(); // Save changes to persist the new item.
             var message = await SendMessage(new Notification($"{itemStorage.Name} had been filled into  {slot.Name}", "All", 1));
-            TempData["Message"] = $"Item '{item.Id}' added to Slot {slot.Name}. \n{message}";
+            TempData["Message"] = $"Item '{item.ItemId}' added to Slot {slot.Name}. \n{message}";
             TempData["Status"] = "Success";
             return RedirectToAction("Refill", new { slotId = model.SlotID });
         }
@@ -106,6 +111,7 @@ namespace StoreAnalysis.Controllers
             var slot = _context.Slots.FirstOrDefault(s => s.SlotID == slotId);
             if (slot == null) return NotFound();
             ViewBag.Slot = slot;
+            ViewBag.SlotItems = _context.GetItemsOnSlot(slotId);
             ViewBag.AvailableItems = _context.ItemsStorage.Where(i => i.Amount > 0).ToList(); // Fetch items with Amount > 0
             var model = new RefillItemViewModel
             {
@@ -135,16 +141,19 @@ namespace StoreAnalysis.Controllers
                 return $"Error: {ex.Message}";
             }
         }
+        
+
         public async Task EmptySlotAndSendMessage(int? slotId)
         {
             if (slotId == null) return;
-            var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
+            var slot = _context.Slots.FirstOrDefault(s => s.SlotID == slotId);
             if (slot == null) return;
-            if (slot.Items == null || slot.Items.Count == 0) return;
+            var items = _context.GetItemsOnSlot(slotId.Value);
+            if (items == null || items.Count == 0) return;
             try
             {
                 // Log sales before deleting items
-                foreach (var item in slot.Items)
+                foreach (var item in items)
                 {
                     var sale = new Sale
                     {
@@ -154,7 +163,6 @@ namespace StoreAnalysis.Controllers
                     _context.Sales.Add(sale);
                     await SendMessage(new Notification($"{item.Name} had been purchased of {slot.Name}", "All", 2));
                 }
-                slot.Items.Clear();
                 var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
                 // Save sales first
                 _context.SaveChanges();

@@ -27,7 +27,7 @@ namespace StoreAnalysis.Script
                 var payload = new
                 {
                     chat_id = _chatId,
-                    text = message.Content
+                    text = $"[{message.Role}] - {message.Content}"
                 };
 
                 var jsonContent = System.Text.Json.JsonSerializer.Serialize(payload);

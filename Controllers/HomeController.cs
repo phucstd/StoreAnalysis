@@ -157,11 +157,12 @@ namespace StoreAnalysis.Controllers
         public async void EmptySlot(int? slotId)
         {
             if(slotId == null) return;
-            var slot = _context.Slots.Include(s => s.Items).FirstOrDefault(s => s.SlotID == slotId);
+            var slot = _context.Slots.FirstOrDefault(s => s.SlotID == slotId);
             if (slot == null) return;
-            if (slot.Items == null || slot.Items.Count == 0) return;
+            var items = _context.GetItemsOnSlot(slotId.Value);
+            if (items == null || items.Count == 0) return;
             // Log sales before deleting items
-            foreach (var item in slot.Items)
+            foreach (var item in items)
             {
                 var sale = new Sale
                 {
@@ -170,7 +171,6 @@ namespace StoreAnalysis.Controllers
                 };
                 _context.Sales.Add(sale);
             }
-            slot.Items.Clear();
             var itemsList = _context.Items.Where(_ => _.SlotID == slotId);
             // Save sales first
             _context.SaveChanges();
