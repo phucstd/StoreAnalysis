@@ -25,6 +25,7 @@ public class StoreAnalysisContext : IdentityDbContext<IdentityUser>
     public DbSet<Sale> Sales { get; set; }
     public DbSet<ItemStorage> ItemsStorage { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<AnalysisImage> AnalysisImages { get; set; }
 
     public List<ItemStorage> GetItemsOnSlot(int slotId)
     {

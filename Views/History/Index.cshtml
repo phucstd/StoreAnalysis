@@ -1,0 +1,32 @@
+﻿@model List<StoreAnalysis.Models.AnalysisImage>
+
+
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Capture History</h5>
+                <table class="table table-bordered border-primary">
+                    <thead>
+                        <tr>
+                            <th scope="col">Capture Date</th>
+                            <th scope="col">Input Image</th>
+                            <th scope="col">Processed Image</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <th scope="row">@item.Date</th>
+                                <td> <a asp-controller="History" asp-action="ShowImage" asp-route-id="@item.Id" asp-route-type="input">@item.CameraImagePath </a></td>
+                                <td> <a asp-controller="History" asp-action="ShowImage" asp-route-id="@item.Id" asp-route-type="processed">@item.AnalyzedImagePath </a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

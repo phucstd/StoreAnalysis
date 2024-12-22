@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -12,12 +13,14 @@ namespace StoreAnalysis.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly StoreAnalysisContext _context;
         private readonly TelegramService _telegramService;
-        public HomeController(StoreAnalysisContext context, TelegramService telegramService)
+        public HomeController(StoreAnalysisContext context, TelegramService telegramService, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _telegramService = telegramService;
+            _webHostEnvironment = webHostEnvironment;
         }
         public static List<SlotCoordinate> GetSlots()
         {
@@ -91,15 +94,29 @@ namespace StoreAnalysis.Controllers
 
             try
             {
-                // Save uploaded image temporarily
-                string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".jpg");  // Ensure the image has a unique name
-                using (var stream = new FileStream(tempPath, FileMode.Create))
+                // Define paths for saving the uploaded and processed images
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
+                string processedFolder = Path.Combine(_webHostEnvironment.WebRootPath, "processed");
+
+                // Ensure directories exist
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                if (!Directory.Exists(processedFolder)) Directory.CreateDirectory(processedFolder);
+
+                // Generate unique file names
+                string inputFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                string processedFileName = Guid.NewGuid().ToString() + ".png";
+
+                string inputFilePath = Path.Combine(uploadsFolder, inputFileName);
+                string processedFilePath = Path.Combine(processedFolder, processedFileName);
+
+                // Save uploaded image
+                using (var stream = new FileStream(inputFilePath, FileMode.Create))
                 {
                     file.CopyTo(stream);
                 }
 
                 // Run the analysis on the uploaded image
-                var json = PythonBrige.Run("deploy", tempPath);  // Pass the image path to Python
+                var json = PythonBrige.Run("deploy", inputFilePath);  // Pass the image path to Python
                 var boundingBoxes = JsonConvert.DeserializeObject<List<Detection>>(json);
                 jsonResponse = JsonConvert.SerializeObject(boundingBoxes);
 
@@ -107,18 +124,17 @@ namespace StoreAnalysis.Controllers
                 emptySlots = AnalyzeSlots(boundingBoxes);
 
                 var slotsId = emptySlots.Select(name => _context.Slots.FirstOrDefault(_ => _.Name.Equals(name))?.SlotID).ToList();
-                if (slotsId != null) 
-                { 
+                if (slotsId != null)
+                {
                     var list = slotsId.ToList();
                     foreach (var slot in list)
                     {
                         EmptySlot(slot);
                     }
                 }
-                
 
                 // Draw bounding boxes on the image
-                using (Image image = Image.FromFile(tempPath))
+                using (Image image = Image.FromFile(inputFilePath))
                 using (var graphics = Graphics.FromImage(image))
                 {
                     foreach (var box in boundingBoxes)
@@ -127,6 +143,9 @@ namespace StoreAnalysis.Controllers
                         graphics.DrawRectangle(Pens.Red, rect);
                     }
 
+                    // Save the processed image
+                    image.Save(processedFilePath, System.Drawing.Imaging.ImageFormat.Png);
+
                     // Save processed image to byte array
                     using (var memoryStream = new MemoryStream())
                     {
@@ -134,9 +153,8 @@ namespace StoreAnalysis.Controllers
                         processedImage = memoryStream.ToArray();
                     }
                 }
-
-                // Delete temporary file
-                System.IO.File.Delete(tempPath);
+                _context.AnalysisImages.Add(new AnalysisImage() { AnalyzedImagePath = processedFileName, CameraImagePath = inputFileName, Date = DateTime.Now });
+                _context.SaveChanges();
             }
             catch (Exception ex)
             {
@@ -152,6 +170,7 @@ namespace StoreAnalysis.Controllers
                 image = Convert.ToBase64String(processedImage)  // Return image as base64 string
             });
         }
+
 
 
         public async void EmptySlot(int? slotId)
