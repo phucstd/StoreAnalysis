@@ -8,6 +8,7 @@ using StoreAnalysis.Script;
 using System.Diagnostics;
 using System.Drawing;
 using VendingAnalysis.Analysis;
+using static Python.Runtime.TypeSpec;
 
 namespace StoreAnalysis.Controllers
 {
@@ -35,9 +36,9 @@ namespace StoreAnalysis.Controllers
                 new SlotCoordinate { Name = "B3", XRange = (895, 1035), YRange = (800, 1200) },
                 new SlotCoordinate { Name = "B4", XRange = (1035, 1180), YRange = (800, 1200) },
                 new SlotCoordinate { Name = "C1", XRange = (615, 755), YRange = (1200, 1600) },
-                new SlotCoordinate { Name = "C2", XRange = (755, 895), YRange = (1000, 1600) },
-                new SlotCoordinate { Name = "C3", XRange = (895, 1035), YRange = (1000, 1600)},
-                new SlotCoordinate { Name = "C4", XRange = (1035, 1180), YRange = (1000, 1600) }
+                new SlotCoordinate { Name = "C2", XRange = (755, 895), YRange = (1200, 1600) },
+                new SlotCoordinate { Name = "C3", XRange = (895, 1035), YRange = (1200, 1600)},
+                new SlotCoordinate { Name = "C4", XRange = (1035, 1180), YRange = (1200, 1600) }
             };
         }
 
@@ -127,9 +128,17 @@ namespace StoreAnalysis.Controllers
                 if (slotsId != null)
                 {
                     var list = slotsId.ToList();
+                    string message = "";
                     foreach (var slot in list)
                     {
                         EmptySlot(slot);
+                        var slotName = _context.Slots.FirstOrDefault(s => s.SlotID == slot)?.Name;
+                        message += message.Equals("") ? "" : "," + $"{slotName}";
+                    }
+                    if(!string.IsNullOrEmpty(message))
+                    {
+                        TempData["Message"] = $"Slot {message} has been cleared and items have been logged.\n";
+
                     }
                 }
 
@@ -198,7 +207,7 @@ namespace StoreAnalysis.Controllers
             slot.IsEmpty = true;
             _context.SaveChanges();
             var message = await SendMessage(new Notification($"Slot {slot.Name} is empty please fill more items", "Employee" , 5));
-            TempData["Message"] = $"Slot {slot.Name} has been cleared and items have been logged. \n{message}";
+            
         }
 
         public async Task<string> SendMessage(Notification message)
